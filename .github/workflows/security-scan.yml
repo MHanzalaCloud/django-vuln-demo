@@ -1,0 +1,178 @@
+# ================================================
+# DJANGO AUTOMATED VULNERABILITY DETECTION
+# Final Project - Muhammad Hanzala
+# Tools: Bandit + pip-audit + Trivy + CodeQL
+# ================================================
+name: Security Vulnerability Scan
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 4 * * *'   # Runs automatically every day at 4AM UTC
+
+jobs:
+
+  # ─────────────────────────────────────────────
+  # JOB 1: BANDIT — Python Code Security (SAST)
+  # Scans your actual Python code for:
+  #   - Hardcoded secrets (B105)
+  #   - SQL Injection (B608)
+  #   - Dangerous functions
+  # ─────────────────────────────────────────────
+  bandit-sast-scan:
+    name: Bandit — Code Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Bandit
+        run: pip install bandit[toml]
+
+      - name: Run Bandit Scan
+        run: |
+          echo "============================================"
+          echo "  BANDIT SAST SCAN - Scanning Python Code"
+          echo "============================================"
+          bandit -r . \
+            --exclude ./.git,./venv,./env \
+            --format txt \
+            --severity-level low \
+            -o bandit-report.txt || true
+          cat bandit-report.txt
+
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-security-report
+          path: bandit-report.txt
+
+  # ─────────────────────────────────────────────
+  # JOB 2: PIP-AUDIT — Dependency Vulnerability Scan
+  # Scans requirements.txt for known CVEs
+  # Checks against OSV + PyPI advisory database
+  # ─────────────────────────────────────────────
+  pip-audit-scan:
+    name: pip-audit — Dependency CVE Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit Scan
+        run: |
+          echo "============================================"
+          echo "  PIP-AUDIT - Checking for Vulnerable Deps"
+          echo "============================================"
+          pip-audit \
+            --requirement requirements.txt \
+            --vulnerability-service osv \
+            --format columns \
+            --output pip-audit-report.txt || true
+          cat pip-audit-report.txt
+
+      - name: Upload pip-audit Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-dependency-report
+          path: pip-audit-report.txt
+
+  # ─────────────────────────────────────────────
+  # JOB 3: TRIVY — Full Filesystem Scanner
+  # Scans both code AND dependencies
+  # Uploads results to GitHub Security Tab
+  # ─────────────────────────────────────────────
+  trivy-scan:
+    name: Trivy — Full Filesystem Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          vuln-type: 'os,library'
+
+      - name: Upload Trivy Results to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+  # ─────────────────────────────────────────────
+  # JOB 4: CODEQL — Deep Code Analysis (SAST)
+  # GitHub's own AI-powered code scanner
+  # Detects complex vulnerabilities including
+  # SQL injection, XSS, path traversal etc.
+  # ─────────────────────────────────────────────
+  codeql-scan:
+    name: CodeQL — Deep Code Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          queries: security-extended
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: codeql-python
+
+  # ─────────────────────────────────────────────
+  # JOB 5: SUMMARY — Final Security Report
+  # Runs after all jobs, prints clear summary
+  # ─────────────────────────────────────────────
+  security-summary:
+    name: Print Security Summary
+    runs-on: ubuntu-latest
+    needs: [bandit-sast-scan, pip-audit-scan, trivy-scan]
+    if: always()
+    steps:
+      - name: Print Summary
+        run: |
+          echo "============================================"
+          echo "        VULNERABILITY SCAN COMPLETE"
+          echo "============================================"
+          echo ""
+          echo "Tools that ran:"
+          echo "  Bandit       → Code SAST (secrets, SQL injection)"
+          echo "  pip-audit    → Dependency CVE check"
+          echo "  Trivy        → Full filesystem scan"
+          echo "  CodeQL       → Deep AI code analysis"
+          echo ""
+          echo "Check the Security tab and Artifacts above"
+          echo "for full vulnerability reports."
+          echo "============================================"

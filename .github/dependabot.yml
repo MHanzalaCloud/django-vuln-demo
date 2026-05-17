@@ -1,0 +1,29 @@
+# ================================================
+# DEPENDABOT - Automatic Dependency Updates
+# Checks for vulnerable packages daily
+# Creates automatic Pull Requests to fix them
+# ================================================
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    labels:
+      - "security"
+      - "dependencies"
+    groups:
+      django-core:
+        patterns:
+          - "django*"
+      python-security:
+        dependency-type: "production"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "github-actions"
+      - "dependencies"
