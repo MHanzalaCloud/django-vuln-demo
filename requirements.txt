@@ -1,6 +1,6 @@
 # ================================================
 # REQUIREMENTS - Django Student Notes App
-# ⚠️ WARNING: Some packages are intentionally old
+# ⚠️ Some packages are intentionally old
 #    to demonstrate vulnerability detection
 # ================================================
 
@@ -8,15 +8,12 @@ Django==4.2.0
 djangorestframework==3.14.0
 
 # ⚠️ INTENTIONAL VULN #1: Pillow 9.0.1
-# Has CVE-2022-45198, CVE-2022-45199
-# pip-audit and Trivy will catch this
+# CVE-2022-45198, CVE-2022-45199
 Pillow==9.0.1
 
 # ⚠️ INTENTIONAL VULN #2: requests 2.20.0
-# Has CVE-2018-18074 (HTTP header injection)
-# pip-audit will catch this
+# CVE-2018-18074
 requests==2.20.0
 
-# Dev dependencies
 pytest==7.4.0
 pytest-django==4.7.0
