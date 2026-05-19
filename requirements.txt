@@ -4,16 +4,16 @@
 #    to demonstrate vulnerability detection
 # ================================================
 
-Django==4.2.0
-djangorestframework==3.14.0
+Django==6.0.5
+djangorestframework==3.17.1
 
 # ⚠️ INTENTIONAL VULN #1: Pillow 9.0.1
 # CVE-2022-45198, CVE-2022-45199
-Pillow==9.0.1
+Pillow==12.2.0
 
 # ⚠️ INTENTIONAL VULN #2: requests 2.20.0
 # CVE-2018-18074
-requests==2.20.0
+requests==2.34.2
 
-pytest==7.4.0
-pytest-django==4.7.0
+pytest==9.0.3
+pytest-django==4.12.0
