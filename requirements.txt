@@ -9,7 +9,7 @@ djangorestframework==3.14.0
 
 # ⚠️ INTENTIONAL VULN #1: Pillow 9.0.1
 # CVE-2022-45198, CVE-2022-45199
-Pillow==9.0.1
+Pillow==12.3.0
 
 # ⚠️ INTENTIONAL VULN #2: requests 2.20.0
 # CVE-2018-18074
