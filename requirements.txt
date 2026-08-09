@@ -4,7 +4,7 @@
 #    to demonstrate vulnerability detection
 # ================================================
 
-Django==4.2.0
+Django==5.2.16
 djangorestframework==3.14.0
 
 # ⚠️ INTENTIONAL VULN #1: Pillow 9.0.1
